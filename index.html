@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My App V1.1.0</title>
+  <style>
+    /* Center everything on the page */
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #4facfe, #00f2fe);
+      color: #fff;
+      flex-direction: column;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 2rem;
+      text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+    }
+
+    #counter {
+      font-size: 4rem;
+      font-weight: bold;
+      margin-bottom: 2rem;
+    }
+
+    button {
+      padding: 1rem 2rem;
+      font-size: 1.5rem;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #fff;
+      transition: background 0.3s, transform 0.2s;
+    }
+
+    button:hover {
+      background-color: rgba(255, 255, 255, 0.4);
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body>
+  <h1>Counter App</h1>
+  <div id="counter">0</div>
+  <button id="incrementBtn">Increment</button>
+
+  <script>
+    const counterEl = document.getElementById('counter');
+    const button = document.getElementById('incrementBtn');
+    let count = 0;
+
+    button.addEventListener('click', () => {
+      count++;
+      counterEl.textContent = count;
+    });
+  </script>
+</body>
+</html>
