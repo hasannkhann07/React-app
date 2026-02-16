@@ -2,8 +2,9 @@ pipeline {
     agent any
 
     environment {
+        // Using BUILD_NUMBER makes every version unique (v1, v2, v3...)
         IMAGE_NAME = "hasannkhann07/react-private"
-        IMAGE_TAG  = "V1.2.0"
+        IMAGE_TAG  = "v${env.BUILD_NUMBER}" 
     }
 
     stages {
@@ -15,19 +16,18 @@ pipeline {
 
         stage('Build Image') {
             steps {
-                // Building the React app inside Docker (using the multi-stage Dockerfile)
                 sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
             }
         }
 
         stage('Push Image') {
             environment {
-                // This automatically creates DOCKER_HUB_USR and DOCKER_HUB_PSW
+                // Jenkins automatically creates _USR and _PSW suffixes
                 DOCKER_HUB = credentials('dockerhub-creds')
             }
             steps {
-                // Use single quotes to prevent Groovy leaks and correctly pass to shell
-                sh 'echo ${DOCKER_HUB_PSW} | docker login -u ${DOCKER_HUB_USR}'
+                // Use single quotes to satisfy the security warning
+                sh 'echo ${DOCKER_HUB_PSW} | docker login -u ${DOCKER_HUB_USR} --password-stdin'
                 sh 'docker push ${IMAGE_NAME}:${IMAGE_TAG}'
             }
         }
@@ -35,11 +35,10 @@ pipeline {
 
     post {
         always {
-            // Good practice: don't leave your credentials on the Jenkins runner
             sh 'docker logout'
         }
         success {
-            echo " Image ${IMAGE_NAME}:${IMAGE_TAG} is now on Docker Hub!"
+            echo "Successfully pushed ${IMAGE_NAME}:${IMAGE_TAG}"
         }
     }
 }
