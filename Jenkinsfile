@@ -1,5 +1,5 @@
 pipeline {
-    agent any 
+    agent any
 
     environment {
         IMAGE_NAME = "hasannkhann07/react-private"
@@ -7,37 +7,39 @@ pipeline {
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/hasannkhann07/React-app'
             }
         }
 
-        stage('Building Image') {
+        stage('Build Image') {
             steps {
-                // Docker now handles npm install & npm build internally!
+                // Building the React app inside Docker (using the multi-stage Dockerfile)
                 sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
             }
         }
 
-        stage('Pushing to Docker Hub') {
+        stage('Push Image') {
+            environment {
+                // This automatically creates DOCKER_HUB_USR and DOCKER_HUB_PSW
+                DOCKER_HUB = credentials('dockerhub-creds')
+            }
             steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh """
-                    echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin
-                    docker push ${IMAGE_NAME}:${IMAGE_TAG}
-                    """
-                }        
+                // Use single quotes to prevent Groovy leaks and correctly pass to shell
+                sh 'echo ${DOCKER_HUB_PSW} | docker login -u ${DOCKER_HUB_USR} --password-stdin'
+                sh 'docker push ${IMAGE_NAME}:${IMAGE_TAG}'
             }
         }
     }
 
     post {
-        success { echo " Successfully built and pushed image!" }
-        failure { echo " Pipeline failed." }
+        always {
+            // Good practice: don't leave your credentials on the Jenkins runner
+            sh 'docker logout'
+        }
+        success {
+            echo " Image ${IMAGE_NAME}:${IMAGE_TAG} is now on Docker Hub!"
+        }
     }
 }
