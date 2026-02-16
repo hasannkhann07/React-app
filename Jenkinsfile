@@ -27,7 +27,7 @@ pipeline {
             }
             steps {
                 // Use single quotes to prevent Groovy leaks and correctly pass to shell
-                sh 'echo ${DOCKER_HUB_PSW} | docker login -u ${DOCKER_HUB_USR} --password-stdin'
+                sh 'echo ${DOCKER_HUB_PSW} | docker login -u ${DOCKER_HUB_USR}'
                 sh 'docker push ${IMAGE_NAME}:${IMAGE_TAG}'
             }
         }
