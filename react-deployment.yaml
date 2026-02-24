@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: react-app-deployment  # This is the name Jenkins will look for
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: react-app
+  template:
+    metadata:
+      labels:
+        app: react-app
+    spec:
+      containers:
+      - name: react-container  # This is the container name
+        image: hasannkhann07/react-private:latest
+        ports:
+        - containerPort: 80
+      imagePullSecrets:
+      - name: my-registry-key
