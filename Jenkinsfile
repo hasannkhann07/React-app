@@ -2,9 +2,12 @@ pipeline {
     agent any
 
     environment {
-        // Using BUILD_NUMBER makes every version unique (v1, v2, v3...)
+        // Core Configuration
         IMAGE_NAME = "hasannkhann07/react-private"
-        IMAGE_TAG  = "v${env.BUILD_NUMBER}" 
+        IMAGE_TAG  = "v${env.BUILD_NUMBER}"
+        
+        // Define the manual path to your scanner here
+        SONAR_SCANNER_PATH = "/opt/sonar-scanner/bin/sonar-scanner"
     }
 
     stages {
@@ -14,31 +17,56 @@ pipeline {
             }
         }
 
-        stage('Build Image') {
+        stage('SonarQube Analysis') {
             steps {
-                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                // withSonarQubeEnv still handles the URL and Token for you
+                withSonarQubeEnv('SonarQube') {
+                    sh """
+                        ${SONAR_SCANNER_PATH} \
+                        -Dsonar.projectKey=react-app \
+                        -Dsonar.sources=. \
+                        -Dsonar.exclusions=node_modules/**,public/**
+                    """
+                }
             }
         }
 
-        stage('Push Image') {
+        stage('Build & Push Image') {
             environment {
-                // Jenkins automatically creates _USR and _PSW suffixes
-                DOCKER_HUB = credentials('dockerhub-creds')
+                DOCKER_CREDS = credentials('dockerhub-creds')
             }
             steps {
-                // Use single quotes to satisfy the security warning
-                sh 'echo ${DOCKER_HUB_PSW} | docker login -u ${DOCKER_HUB_USR} --password-stdin'
-                sh 'docker push ${IMAGE_NAME}:${IMAGE_TAG}'
+                sh '''
+                    echo "$DOCKER_CREDS_PSW" | docker login -u "$DOCKER_CREDS_USR" --password-stdin
+                    docker build -t $IMAGE_NAME:$IMAGE_TAG .
+                    docker push $IMAGE_NAME:$IMAGE_TAG
+                    docker logout
+                '''
+            }
+        }
+
+        stage('Security Scan (Trivy)') {
+            steps {
+                sh "trivy image --severity HIGH,CRITICAL --exit-code 0 $IMAGE_NAME:$IMAGE_TAG"
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
+                    sh """
+                        kubectl --kubeconfig=${KUBECONFIG} apply -f react-deployment.yaml
+                        kubectl --kubeconfig=${KUBECONFIG} set image deployment/react-app-deployment \
+                            react-container=${IMAGE_NAME}:${IMAGE_TAG}
+                    """
+                }
             }
         }
     }
 
     post {
         always {
-            sh 'docker logout'
-        }
-        success {
-            echo "Successfully pushed ${IMAGE_NAME}:${IMAGE_TAG}"
+            cleanWs()
         }
     }
 }
