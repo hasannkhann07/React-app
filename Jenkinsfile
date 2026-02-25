@@ -2,17 +2,15 @@ pipeline {
     agent any
 
     environment {
-        // Core Configuration
         IMAGE_NAME = "hasannkhann07/react-private"
         IMAGE_TAG  = "v${env.BUILD_NUMBER}"
-        
-        // Define the manual path to your scanner here
         SONAR_SCANNER_PATH = "/opt/sonar-scanner/bin/sonar-scanner"
     }
 
+    stages {
+
         stage('SonarQube Analysis') {
             steps {
-                // withSonarQubeEnv still handles the URL and Token for you
                 withSonarQubeEnv('SonarQube') {
                     sh """
                         ${SONAR_SCANNER_PATH} \
@@ -48,8 +46,8 @@ pipeline {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     sh """
-                        kubectl --kubeconfig=${KUBECONFIG} apply -f react-deployment.yaml
-                        kubectl --kubeconfig=${KUBECONFIG} set image deployment/react-app-deployment \
+                        kubectl apply -f react-deployment.yaml
+                        kubectl set image deployment/react-app-deployment \
                             react-container=${IMAGE_NAME}:${IMAGE_TAG}
                     """
                 }
