@@ -10,13 +10,6 @@ pipeline {
         SONAR_SCANNER_PATH = "/opt/sonar-scanner/bin/sonar-scanner"
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                git branch: 'main', url: 'https://github.com/hasannkhann07/React-app'
-            }
-        }
-
         stage('SonarQube Analysis') {
             steps {
                 // withSonarQubeEnv still handles the URL and Token for you
