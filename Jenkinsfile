@@ -9,12 +9,6 @@ pipeline {
 
     stages {
 
-        stage('Check Branch'){
-            steps{
-                echo "${env.BRANCH_NAME}" 
-            }
-        }
-
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
