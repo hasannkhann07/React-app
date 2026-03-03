@@ -125,6 +125,3 @@ Optimize Kubernetes orchestration
 
 Fork the repository and enhance the pipeline for your projects.
 
-License
-
-MIT License © 2026 Your Name
