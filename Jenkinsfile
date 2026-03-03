@@ -6,8 +6,15 @@ pipeline {
         IMAGE_TAG  = "v${env.BUILD_NUMBER}"
         SONAR_SCANNER_PATH = "/opt/sonar-scanner/bin/sonar-scanner"
     }
+    
 
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+                
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') { 
