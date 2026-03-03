@@ -7,6 +7,7 @@ pipeline {
         SONAR_SCANNER_PATH = "/opt/sonar-scanner/bin/sonar-scanner"
     }
 
+    stages {
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') { 
