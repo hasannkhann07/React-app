@@ -8,6 +8,11 @@ pipeline {
     }
 
     stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
         stage('SonarQube Analysis') {
             steps {
@@ -23,7 +28,7 @@ pipeline {
             }
         }
 
-        stage('Build & Push Image') {
+        stage('Build Image') {
             environment {
                 DOCKER_CREDS = credentials('dockerhub-creds')
             }
@@ -31,8 +36,6 @@ pipeline {
                 sh '''
                     echo "$DOCKER_CREDS_PSW" | docker login -u "$DOCKER_CREDS_USR" --password-stdin
                     docker build -t $IMAGE_NAME:$IMAGE_TAG .
-                    docker push $IMAGE_NAME:$IMAGE_TAG
-                    docker logout
                 '''
             }
         }
@@ -43,10 +46,18 @@ pipeline {
             }
         }
 
+        stage('Push Image') {
+            steps {
+                sh "docker push $IMAGE_NAME:$IMAGE_TAG"
+                sh "docker logout"
+            }
+        }
+
         stage('Deploy to Kubernetes') {
             steps {
                 withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
                     sh """
+                        export KUBECONFIG=$KUBECONFIG
                         kubectl apply -f react-deployment.yaml
                         kubectl set image deployment/react-app-deployment \
                             react-container=${IMAGE_NAME}:${IMAGE_TAG}
