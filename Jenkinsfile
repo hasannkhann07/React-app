@@ -11,10 +11,11 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                withSonarQubeEnv('SonarQube') {
+                withSonarQubeEnv('SonarQube') { 
                     sh """
                         ${SONAR_SCANNER_PATH} \
-                        -Dsonar.projectKey=react-app \
+                        -Dsonar.host.url=http://13.61.21.58:9000 \
+                        -Dsonar.projectKey=react-app-hasan \
                         -Dsonar.sources=. \
                         -Dsonar.exclusions=node_modules/**,public/**
                     """
